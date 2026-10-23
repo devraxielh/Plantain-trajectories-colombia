@@ -1,0 +1,157 @@
+# ====================================================================================================
+# ARCHIVO PLANO DE CONFIGURACIÓN Y PARÁMETROS DEL PROTOCOLO EXPERIMENTAL
+# Todos los hiperparámetros, umbrales, rutas y coordenadas se cargan dinámicamente desde este archivo.
+# ====================================================================================================
+
+# --- 0. CONFIGURACIÓN GENERAL Y FLUJO DE DATOS ---
+# Si PREGUNTAR_ARCHIVO_INICIAL = True, el orquestador pregunta en consola qué archivo (.xlsx/.csv) usar.
+PREGUNTAR_ARCHIVO_INICIAL = True
+ARCHIVO_INICIAL_POR_DEFECTO = PLATANO.xlsx
+CARPETA_RESULTADOS = result
+SEMILLA_ALEATORIA = 42
+PROPORCION_TRAIN_HISTORICO = 0.80
+# 0 = usar el extremo disponible en el archivo; valores explicitos recortan el panel.
+ANIO_INICIO_ANALISIS = 0
+ANIO_FIN_ANALISIS = 0
+# Decisión explícita de alcance. El archivo original conserva estos registros.
+EXCLUIR_DEPARTAMENTOS = SAN ANDRES Y PROVIDENCIA
+MOTIVO_EXCLUSION_DEPARTAMENTOS = Exclusión solicitada para el estudio continental; cobertura temporal y escala cultivada particulares. No implica que sus datos sean erróneos.
+USAR_CACHE_CLIMA = True
+DPI_FIGURAS = 300
+
+# --- 1. PARÁMETROS CLIMÁTICOS (NASA POWER API & NOAA CPC ONI) ---
+NASA_POWER_COMUNIDAD = AG
+NASA_PARAMETROS = PRECTOTCORR,T2M,T2M_MAX,T2M_MIN,ALLSKY_SFC_SW_DWN,RH2M
+NASA_MAX_WORKERS = 8
+NASA_TIMEOUT_SEGUNDOS = 35
+NOAA_ONI_URL = https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt
+UMBRAL_DEFICIT_HIDRICO_MENSUAL_MM = 100.0
+UMBRAL_ONI_EL_NINO = 0.5
+UMBRAL_ONI_LA_NINA = -0.5
+MIN_TRIMESTRES_FASE_ENSO = 5
+
+# --- 2. PARÁMETROS FASE 1: CLUSTERING DTW (SIN WARD), MANN-KENDALL Y TOPOLOGÍA DE GRAFOS ---
+# Incluye series cortas sin extrapolarlas: cada pareja requiere estos años reales compartidos.
+MINIMO_ANIOS_COMPARTIDOS_DTW = 5
+VENTANA_SAKOE_CHIBA = 2
+GRILLA_CLUSTERS_K = 2,3,4,5,6
+# Tipología solicitada de cuatro perfiles de rendimiento/área. La grilla sigue como diagnóstico.
+# K_CLUSTERS_FIJO = 0 restaura selección adaptativa; 4 fija la tipología, sin declarar optimalidad.
+K_CLUSTERS_FIJO = 4
+ALGORITMO_CLUSTER_FIJO = pam
+GEOMETRIA_PRINCIPAL_ADAPTATIVA = escala
+# Selección adaptativa sobre DTW bivariado; estos umbrales son reglas operativas, no pruebas estadísticas.
+ALGORITMOS_ADAPTATIVOS = pam,average,complete
+BLOQUES_ESTABILIDAD_ANIOS = 1,2
+SILHOUETTE_MINIMA_ADAPTATIVA = 0.25
+ARI_P10_MINIMO = 0.75
+JACCARD_P10_MINIMO = 0.75
+ARI_COBERTURA_MINIMO = 0.75
+FRACCION_REPLICAS_VALIDAS_MINIMA = 0.90
+TOLERANCIA_SILHOUETTE_ADAPTATIVA = 0.02
+REINICIOS_KMEDOIDS_PAM = 15
+MAX_ITER_KMEDOIDS = 100
+VECINOS_KNN_GRAFO = 2
+ALPHA_SIGNIFICANCIA_ESTADISTICA = 0.05
+
+# --- 3. PARÁMETROS FASE 2: CADENAS DE MARKOV, ERGODICIDAD, ESTACIONARIEDAD Y BAYES DIRICHLET ---
+CUANTILES_ESTADOS_MARKOV = 25,50,75
+ALPHA_DIRICHLET_BAYES = 0.5
+ALPHA_DIRICHLET_BOOTSTRAP = 0.05
+UMBRAL_CELDA_ESCASA = 5
+REPLICAS_BOOTSTRAP_MARKOV = 1000
+
+# --- 4. PARÁMETROS FASE 3: VALIDACIÓN TEMPORAL EXPANSIVA (ROLLING-ORIGIN), ML Y TREESHAP ---
+ANIOS_EVALUACION_ROLLING_ORIGIN = 6
+# Incertidumbre condicional de ganancia RMSE en comparaciones pareadas sin/con clima.
+REPLICAS_BOOTSTRAP_ABLACION = 2000
+VARIABLES_PREDICTORAS_XAI = Area_Lag1 (ha),Radiacion_Solar_Media (MJ/m2/dia),Temp_Maxima_Media_Anual (C),Humedad_Relativa_Media (%),Precipitacion_Acumulada_Anual (mm),Precipitacion_CV_Intraanual,Precip_Lag1 (mm),Anomalia_Temp_Max_Depto (Z),Anomalia_Precip_Depto (Z),ONI_Lag1 (C),ONI_Media_Anual (C)
+
+# Hiperparámetros de los 5 Modelos Supervisados
+RF_N_ESTIMATORS = 500
+RF_MAX_DEPTH = 10
+RF_MIN_SAMPLES_LEAF = 2
+
+XGB_N_ESTIMATORS = 350
+XGB_MAX_DEPTH = 4
+XGB_LEARNING_RATE = 0.04
+XGB_SUBSAMPLE = 0.85
+XGB_COLSAMPLE_BYTREE = 0.85
+
+LGBM_N_ESTIMATORS = 350
+LGBM_MAX_DEPTH = 5
+LGBM_NUM_LEAVES = 20
+LGBM_LEARNING_RATE = 0.04
+LGBM_SUBSAMPLE = 0.85
+
+GBM_N_ESTIMATORS = 300
+GBM_MAX_DEPTH = 4
+GBM_LEARNING_RATE = 0.04
+GBM_SUBSAMPLE = 0.85
+
+ELASTICNET_ALPHA = 0.10
+ELASTICNET_L1_RATIO = 0.50
+
+# Parámetros de Incertidumbre en Puntos de Cambio de Contribución SHAP (SHAP = 0)
+FRACCION_SUAVIZADO_LOWESS = 0.38
+REPLICAS_BOOTSTRAP_SHAP = 200
+NODOS_GRILLA_LOWESS = 120
+FRACCION_MINIMA_ESTABILIDAD_CRUCE = 0.25
+
+# --- 5. PARÁMETROS FASE 4 (INTEGRACIÓN): INDICADORES DESCRIPTIVOS DE RESILIENCIA (VER readme.txt) ---
+UMBRAL_CHOQUE_CLIMATICO_Z = 1.00
+UMBRAL_CHOQUE_ONI_ABS = 0.75
+PESO_INDICE_RESISTENCIA_RS = 0.40
+PESO_INDICE_RECUPERACION_RC = 0.30
+PESO_INDICE_ESTABILIDAD_ST = 0.30
+
+# --- 6. PALETA DE COLORES Y ETIQUETAS VISUALES ---
+COLOR_CLUSTER_C1 = #6C757D
+COLOR_CLUSTER_C2 = #2A9D8F
+COLOR_CLUSTER_C3 = #E9C46A
+COLOR_CLUSTER_C4 = #E63946
+# Etiquetas de reserva; fase 1 genera las leyendas definitivas con medias reales de rendimiento y área.
+ETIQUETA_CLUSTER_C1 = C1: Lower Mean Yield Profile
+ETIQUETA_CLUSTER_C2 = C2: Lower-Intermediate Mean Yield Profile
+ETIQUETA_CLUSTER_C3 = C3: Upper-Intermediate Mean Yield Profile
+ETIQUETA_CLUSTER_C4 = C4: Higher Mean Yield Profile
+COLOR_ENSO_EL_NINO = #D62828
+COLOR_ENSO_LA_NINA = #1D3557
+COLOR_ENSO_NEUTRO = #8D99AE
+
+# --- 7. COORDENADAS AGROCLIMÁTICAS DE REFERENCIA POR DEPARTAMENTO (FORMATO: DEPTO | MUNICIPIO | LAT | LON) ---
+COORD_DEPTO_AMAZONAS = Leticia / Ribera Amazonas | -4.2153 | -69.9406
+COORD_DEPTO_ANTIOQUIA = Apartadó / Carepa (Urabá) | 7.8833 | -76.6333
+COORD_DEPTO_ARAUCA = Saravena / Tame (Piedemonte) | 6.9539 | -71.8767
+COORD_DEPTO_ATLANTICO = Suan / Campo de la Cruz | 10.3300 | -74.8800
+COORD_DEPTO_BOGOTA = Bogotá D.C. / Sabana | 4.7110 | -74.0721
+COORD_DEPTO_BOLIVAR = María La Baja / San Juan Nepomuceno | 9.9833 | -75.3000
+COORD_DEPTO_BOYACA = Puerto Boyacá / Otanche | 5.9758 | -74.5875
+COORD_DEPTO_CALDAS = Chinchiná / Victoria / Bajo Occidente | 5.3200 | -74.9000
+COORD_DEPTO_CAQUETA = Florencia / El Doncello | 1.6144 | -75.6062
+COORD_DEPTO_CASANARE = Aguazul / Tauramena / Yopal | 5.1700 | -72.5500
+COORD_DEPTO_CAUCA = El Tambo / Timbiquí / Norte del Cauca | 2.7500 | -77.6500
+COORD_DEPTO_CESAR = Chimichagua / Valledupar | 9.2578 | -73.8122
+COORD_DEPTO_CHOCO = Riosucio / Unguía (Darién Chocó) | 7.4406 | -77.1189
+COORD_DEPTO_CORDOBA = Tierralta / Valencia / Moñitos | 8.1725 | -76.0592
+COORD_DEPTO_CUNDINAMARCA = Yacopí / La Palma / Sasaima | 5.4600 | -74.3400
+COORD_DEPTO_GUAINIA = Inírida | 3.8653 | -67.9239
+COORD_DEPTO_GUAVIARE = San José del Guaviare / El Retorno | 2.5729 | -72.6459
+COORD_DEPTO_HUILA = Rivera / Campoalegre / Garzón | 2.6800 | -75.3200
+COORD_DEPTO_LA_GUAJIRA = Dibulla / Riohacha | 11.2725 | -73.3092
+COORD_DEPTO_MAGDALENA = Zona Bananera (Sevilla / Ciénaga) | 10.7647 | -74.1572
+COORD_DEPTO_META = Fuente de Oro / Granada (Ariari) | 3.4628 | -73.6217
+COORD_DEPTO_NARINO = Tumaco (Costa Pacífica) | 1.8056 | -78.7647
+COORD_DEPTO_NARIÑO = Tumaco (Costa Pacífica) | 1.8056 | -78.7647
+COORD_DEPTO_NORTE_DE_SANTANDER = Tibú / El Zulia (Catatumbo) | 8.6390 | -72.7360
+COORD_DEPTO_PUTUMAYO = Puerto Asís / Orito | 0.5133 | -76.4986
+COORD_DEPTO_QUINDIO = Montenegro / La Tebaida / Quimbaya | 4.4500 | -75.7900
+COORD_DEPTO_RISARALDA = Pereira / La Virginia / Marsella | 5.1500 | -76.1000
+COORD_DEPTO_SAN_ANDRES_Y_PROVIDENCIA = San Andrés Isla | 12.5567 | -81.7185
+COORD_DEPTO_ARCHIPIELAGO_DE_SAN_ANDRES = San Andrés Isla | 12.5567 | -81.7185
+COORD_DEPTO_SANTANDER = Cimitarra / Barrancabermeja | 6.3150 | -73.9500
+COORD_DEPTO_SUCRE = San Marcos / Majagual (Mojana) | 8.6600 | -75.1300
+COORD_DEPTO_TOLIMA = Chaparral / Espinal / Guamo | 4.1500 | -74.8800
+COORD_DEPTO_VALLE_DEL_CAUCA = Palmira / Buga / Tuluá / Caicedonia | 3.8500 | -76.3500
+COORD_DEPTO_VAUPES = Mitú | 1.2578 | -70.2347
+COORD_DEPTO_VICHADA = Puerto Carreño / Cumaribo | 6.1890 | -67.4859
